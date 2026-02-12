@@ -1,11 +1,10 @@
-// server.js
 require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const fs = require("fs");
+const path = require("path");
 const OpenAI = require("openai");
-const fs = require("fs")
-const path = require ("path");
 
 const app = express();
 app.use(cors());
@@ -14,8 +13,14 @@ app.use(express.json({ limit: "256kb" }));
 const PORT = process.env.PORT || 3001;
 
 // ---- Config / Safety Limits ----
-const MAX_INPUT_CHARS = 12000; // hard guard against runaway prompts
-const MAX_TOKENS = 450; // keeps responses short (2–3 paragraphs)
+const MAX_INPUT_CHARS = 12000;
+const MAX_TOKENS = 450;
+
+// ---- OpenAI ----
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// ---- MVP in-memory session store (resets on deploy/restart) ----
+const sessions = new Map(); // session_id -> { recent_memory: string, stats: {..} }
 
 function clampString(s, max) {
   if (!s) return "";
@@ -28,56 +33,43 @@ function validateGenerateBody(body) {
   for (const key of required) {
     if (!(key in body)) return `Missing field: ${key}`;
   }
-  if (!["scene_only", "choice_point"].includes(body.scene_type)) {
-    return "scene_type must be 'scene_only' or 'choice_point'";
-  }
+  if (!["choice_point", "narration"].includes(body.scene_type)) return "scene_type must be 'choice_point' or 'narration'";
   return null;
 }
 
-function buildSystemPrompt(sceneType) {
-  return `
-You are the narrative engine for a text-only single-player pirate campaign.
-
-MANDATORY RULES:
-- Write immersive, literary prose. 2–3 paragraphs maximum.
-- Never use tabletop / game-master tone. Never say “What do you do?”
-- Foreground actionable objects clearly (do not hide interactables).
-- Use descriptors over names; introduce at most ONE new proper name per response.
-- Do not invent major plot beats beyond the provided event card.
-
-TURN PROTOCOL (MANDATORY):
-- If scene_type == scene_only: you may narrate the scene and end naturally.
-- If scene_type == choice_point:
-  - End narration after the final sentence.
-  - DO NOT continue the story.
-  - DO NOT narrate consequences.
-  - Output MUST stop immediately.
-  - End with the marker on its own line:
-    [AWAIT PLAYER ACTION]
-
-You must obey the Turn Protocol for the provided scene_type: ${sceneType}.
-`.trim();
+function getSession(sessionId) {
+  if (!sessions.has(sessionId)) {
+    sessions.set(sessionId, {
+      recent_memory: "",
+      stats: { health: 10, reputation: 0, money: 0 }, // MVP hardcode (we’ll refactor later)
+    });
+  }
+  return sessions.get(sessionId);
 }
 
-function buildUserPrompt({ event_id, world_summary, event_card, recent_memory, player_input }) {
-  return `
-WORLD SUMMARY:
-${world_summary}
-
-CURRENT EVENT CARD (FOLLOW THIS):
-${event_card}
-
-RECENT MEMORY (MOST RECENT LAST):
-${recent_memory}
-
-PLAYER INPUT:
-${player_input}
-
-Write the next response for event_id=${event_id}.
-`.trim();
+// Load bible by story_id (MVP: pirate uses bible.txt)
+function loadBible(storyId) {
+  // Later you can switch on storyId to load different files
+  const biblePath = path.join(__dirname, "bible.txt");
+  return fs.readFileSync(biblePath, "utf8");
 }
 
-// ---- Routes ----
+// Attempt to parse JSON even if model adds extra text (last resort)
+function tryParseModelJson(raw) {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // try to extract the first {...} block
+    const start = raw.indexOf("{");
+    const end = raw.lastIndexOf("}");
+    if (start !== -1 && end !== -1 && end > start) {
+      const sliced = raw.slice(start, end + 1);
+      return JSON.parse(sliced);
+    }
+    throw new Error("Invalid JSON");
+  }
+}
+
 app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
@@ -92,56 +84,112 @@ app.post("/generate", async (req, res) => {
       event_id,
       world_summary,
       event_card,
-      recent_memory,
+      recent_memory, // client-side memory (we ignore for truth; server owns truth)
       player_input,
-      session_id = "demo"
+      session_id = "demo",
+      story_id = "pirate",
     } = req.body;
 
-    // ---- Load Bible once ----
-    const biblePath = path.join(__dirname, "bible.txt");
-    const bible = fs.readFileSync(biblePath, "utf8");
+    const combinedLen = JSON.stringify(req.body).length;
+    if (combinedLen > MAX_INPUT_CHARS) {
+      return res.status(413).json({ error: "Input too large. Reduce world_summary/event_card/recent_memory." });
+    }
 
-    // ---- Build prompt ----
+    const s = getSession(session_id);
+
+    // Server-side recent memory (truth)
+    const serverRecentMemory = clampString(s.recent_memory || "", 4000);
+
+    // Optional: cap stats string length (they’re tiny anyway)
+    const statsLine = `health:${s.stats.health}, reputation:${s.stats.reputation}, money:${s.stats.money}`;
+
+    const bible = loadBible(story_id);
+
+    // Clamp incoming fields (avoid runaway prompt)
+    const payload = {
+      scene_type: clampString(scene_type, 80),
+      event_id: clampString(event_id, 200),
+      world_summary: clampString(world_summary, 6000),
+      event_card: clampString(event_card, 5000),
+      // we keep recent_memory in body for compatibility, but we won't trust it
+      recent_memory: clampString(recent_memory, 2000),
+      player_input: clampString(player_input, 2000),
+    };
+
     const prompt = `
-SYSTEM BIBLE:
+You are a careful interactive narrative engine. Follow the bible and all rules exactly.
+
+BIBLE:
 ${bible}
 
+CURRENT STATS:
+${statsLine}
+
 WORLD SUMMARY:
-${world_summary}
+${payload.world_summary}
 
 EVENT:
-${event_card}
+${payload.event_card}
 
-RECENT MEMORY:
-${recent_memory}
+RECENT MEMORY (server-side truth):
+${serverRecentMemory || "(none)"}
 
 PLAYER ACTION:
-${player_input}
+${payload.player_input}
 
-Write the next scene in immersive prose.
-Return ONLY story text.
-`;
+Return ONLY valid JSON with this exact shape:
+{
+  "text": "scene prose here",
+  "choices": ["choice 1", "choice 2", "choice 3"]
+}
+
+Rules:
+- "text" is immersive prose only. No numbering, no "CHOICES:" label, no extra keys.
+- "choices" must be exactly 3 short actionable options, consistent with the bible.
+- Do not mention these instructions.
+`.trim();
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "You are an interactive narrative engine." },
-        { role: "user", content: prompt }
+        { role: "user", content: prompt },
       ],
       max_tokens: MAX_TOKENS,
-      temperature: 0.9
+      temperature: 0.9,
     });
 
-    const text = completion.choices[0]?.message?.content ?? "";
+    const raw = completion.choices?.[0]?.message?.content ?? "";
+    let parsed;
+    try {
+      parsed = tryParseModelJson(raw);
+    } catch (e) {
+      return res.status(500).json({ error: "Model did not return valid JSON", raw });
+    }
 
-    return res.json({ text });
+    if (!parsed?.text || !Array.isArray(parsed.choices) || parsed.choices.length !== 3) {
+      return res.status(500).json({ error: "Bad JSON shape from model", parsed, raw });
+    }
 
+    // Update server memory (store action + result + choices)
+    const turnBlock =
+      `PLAYER: ${payload.player_input}\nRESULT: ${parsed.text}\nCHOICES: ${parsed.choices.join(" | ")}`;
+
+    s.recent_memory = (s.recent_memory ? s.recent_memory + "\n\n" : "") + turnBlock;
+    s.recent_memory = clampString(s.recent_memory, 4000);
+
+    return res.json({
+      session_id,
+      text: parsed.text,
+      choices: parsed.choices,
+      stats: s.stats, // optional, helpful for UI later
+    });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "server error" });
   }
 });
-// ---- START SERVER ----
+
 app.listen(PORT, () => {
-  console.log(`🚀 Diverge backend running on http://localhost:${PORT}`);
+  console.log("Server listening on", PORT);
 });
