@@ -87,44 +87,58 @@ app.post("/generate", async (req, res) => {
     const err = validateGenerateBody(req.body);
     if (err) return res.status(400).json({ error: err });
 
-    const combined = JSON.stringify(req.body).length;
-    if (combined > MAX_INPUT_CHARS) {
-      return res.status(413).json({ error: "Input too large. Reduce world_summary/event_card/recent_memory." });
-    }
+    const {
+      scene_type,
+      event_id,
+      world_summary,
+      event_card,
+      recent_memory,
+      player_input,
+      session_id = "demo"
+    } = req.body;
 
-    const payload = {
-      session_id:clampString(req.body.session_id||"demo", 80),
-      scene_type: req.body.scene_type,
-      event_id: clampString(req.body.event_id, 200),
-      world_summary: clampString(req.body.world_summary, 6000),
-      event_card: clampString(req.body.event_card, 5000),
-      recent_memory: clampString(req.body.recent_memory, 4000),
-      player_input: clampString(req.body.player_input, 2000),
-    };
+    // ---- Load Bible once ----
+    const biblePath = path.join(__dirname, "bible.txt");
+    const bible = fs.readFileSync(biblePath, "utf8");
 
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: "Missing OPENAI_API_KEY in .env" });
-    }
+    // ---- Build prompt ----
+    const prompt = `
+SYSTEM BIBLE:
+${bible}
 
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+WORLD SUMMARY:
+${world_summary}
 
-    const completion = await client.chat.completions.create({
-      model: process.env.MODEL || "gpt-4o-mini",
+EVENT:
+${event_card}
+
+RECENT MEMORY:
+${recent_memory}
+
+PLAYER ACTION:
+${player_input}
+
+Write the next scene in immersive prose.
+Return ONLY story text.
+`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: buildSystemPrompt(payload.scene_type) },
-        { role: "user", content: buildUserPrompt(payload) },
+        { role: "system", content: "You are an interactive narrative engine." },
+        { role: "user", content: prompt }
       ],
-      temperature: 0.8,
       max_tokens: MAX_TOKENS,
+      temperature: 0.9
     });
 
-    const text = completion.choices?.[0]?.message?.content ?? "";
-    const usage = completion.usage ?? null;
+    const text = completion.choices[0]?.message?.content ?? "";
 
-    return res.json({ text, usage });
+    return res.json({ text });
+
   } catch (e) {
     console.error(e);
-    return res.status(500).json({ error: "Server error", detail: String(e?.message || e) });
+    return res.status(500).json({ error: "server error" });
   }
 });
 // ---- START SERVER ----

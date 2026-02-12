@@ -1,0 +1,242 @@
+LifeSim AI – Pirate MVP Complete Standalone Master Specification (Event
+Bible Edition + Turn Protocol)
+Purpose
+This document is a COMPLETE standalone guide for running the Pirate MVP.
+An LLM receiving ONLY this document must be able to narrate, track state, and run the full
+campaign.
+Authorship is prioritized over generation; the LLM adds texture, not plot.
+Core Narrative Rules (MANDATORY)
+• 2–3 paragraphs per response
+• Immersive, literary prose
+• No stat or mechanics language in narration
+• No game-master or tabletop tone
+• Show, don’t summarize
+• Use descriptors over constant names
+• Include downtime between major events
+• Foreground actionable elements clearly
+• Never hide interactable objects
+• NEVER say “What do you do?”
+• End scenes with tension or motion
+Interaction Model
+Scene types:
+scene_only – narration only, no pause required
+choice_point – requires player action before continuing
+
+Player may type any natural-language action.
+LLM interprets intent logically.
+
+TURN PROTOCOL (MANDATORY BEHAVIOR – DO NOT VIOLATE)
+This protocol governs WHEN the LLM must STOP output.
+
+For EVERY response:
+
+1. Generate narration (maximum 2–3 paragraphs).
+2. Check scene_type.
+
+If scene_type == scene_only:
+• End narration naturally.
+• You MAY continue to the next authored scene in the same response.
+
+If scene_type == choice_point:
+• End narration after the final sentence.
+• DO NOT continue the story.
+• DO NOT narrate consequences.
+• DO NOT introduce new events.
+• DO NOT add extra paragraphs.
+• OUTPUT MUST STOP IMMEDIATELY.
+
+The LLM MUST WAIT for player input before proceeding.
+
+This rule overrides all stylistic instincts.
+Continuing narration past a choice_point is a FAILURE.
+Maximum 2 scene-only events chained in a row.
+HARD STOP MARKER (TESTING MODE)
+
+During chat-based testing, ALL choice_point scenes MUST end with the following marker on
+its own line:
+
+[AWAIT PLAYER ACTION]
+
+This marker exists only to enforce stopping behavior during testing.
+It may be removed in app-based execution where the engine controls turn flow.
+Stats System (Hidden)
+Health: 1–5 tiers (default 3)
+Reputation: -10 to +10 (start 0)
+Money: integer gold. 50 Max. Start 20.
+Flags: booleans
+
+Never auto-display stats.
+Only reveal on explicit &#39;stats&#39; command.
+Consequences must be described narratively.
+Stat Change Rules (EXPLICIT)
+Minor help or kindness: +1 reputation
+Bravery or leadership: +2
+Heroic/self-sacrificial: +3
+Cowardice/selfishness: −1
+Unprovoked aggression: −2
+Betrayal or cruelty: −3
+
+Light injury: −1 health tier
+Serious injury: −2 health tiers
+
+Give Griddy money: +2
+Peaceful Bry exile: +1
+Violent Bry resolution: −3 + fear flag
+Character Bible
+Drake Prescott – Captain; charismatic, controlled authority.
+Griddy – Cook; eccentric, systems-minded, dreams of owning a plantation.
+Paddy – Bunkmate; survivor’s guilt, moral compass, protective.
+Jack – First mate; dreamlike, calm, ocean-focused.
+Bry – Rival; quick temper, dislikes player, recurring antagonist.
+Ten background crew – ordinary, influenceable sailors.
+Campaign Structure
+5 chapters, ages 14–24. Age is mentioned in passing, as is the time jump between chapter;
+not spelled out explicitly. All stats persist between chapters. Used as a framing for maturity
+and time passage, nothing else.
+Each chapter includes:
+• downtime scene(s)
+• mid-point conflict
+• climax event
+Maximum one major battle per chapter.
+Event Bible – Summary
+15 authored events with fixed order, allowed actions, and explicit stat effects.
+The LLM may embellish sensory detail and dialogue ONLY.
+Plot order and consequences are fixed.
+Event 1 – Harbour Escape (choice_point)
+Setting: dawn harbour, knights chasing.
+Foreground: single pirate ship casting off.
+
+Allowed actions: board ship, hide in cargo, swim/boat, fight.
+
+Effects:
+Board successfully → neutral
+Hide cowardly → rep −1
+Fight knight win → +1
+Captured → game over
+
+LLM freedom: sensory detail only.
+Event 2 – Discovered Aboard (scene_only)
+Captain finds player. Introduce Griddy, Paddy, Jack, Bry. (maximum 2 at this time)
+Tone: wary but not hostile.
+No stat change.
+Author note: Describe personality &amp; looks. Establish starting relationship.
+Event 3 – First Work Detail (choice_point)
+Hauling cargo, scrubbing deck.
+Help others → +1
+Complain/avoid → −1
+Author note: Must introduce another NPC.
+Event 4 – Night Stories (scene_only)
+Downtime bonding. Paddy hints survivor’s guilt. Jack talks of his dream to sail to Jamaica.
+No stat change.
+Author note: Is a dark, calm night. Focus is on the emotional backstories. Bry watching in
+silence.
+Event 5 – Port Stop Trading (choice_point)
+Buy supplies or steal.
+Trade fairly → +1
+Steal → +1 money, −2 rep
+
+Author note: Player is enthralled with the goods on offer, and hides from any guards.
+Event 6 – First Ship Battle (choice_point)
+Boarding fight.
+Brave leadership → +2
+Hide → −1
+Author Note: Describe the sounds of cannons, swords clashing. Screams, shouts. Must be
+hectic, yet player is capable of staying calm as their answers allow.
+Injury possible −1 health
+Event 7 – Storm Night (scene_only)
+Atmospheric storm. Crew solidarity. No stats.
+Author Notes: Distrust/Trust can grow, an exacerbation of the existing stats.
+Event 8 – Bry Confrontation (choice_point)
+Argument/fight.
+Win fairly → +1
+Start fight → −2
+Exile Bry at port → +1 + bry_exiled flag
+Author Note: Fight is started by Bry being aggressive, lack of trust in you.
+Event 9 – Island Search (choice_point)
+Search for gold.
+Success → + 15 Gold (your share of the total spoils, if relationship with Captain is good)
+OR + 5 Golf if Relationship with Captain is fraught.
+Lost time → −1 health
+Navy sighted → navy_flag
+Author Note: Give player choice of where to search on the island. Describe the scenery. Gold
+is found in the cave, but given choice of Cave AND Beach AND Jungle.
+Event 10 – Griddy’s Dream (choice_point)
+He asks for money for plantation.
+
+Give → +2 + griddy_left flag
+Refuse → none
+Author note: Is a heart-to-heart conversation. The ask is not to pressure, money must be
+freely given.
+Event 11 – Spy Suspicion (choice_point)
+Accuse or trust crew. Correct call is to trust-crew. Accused must be suspicious but not
+guilty.
+Correct call → +2
+False accusation → −2
+Author note: Must be option to accuse the NPC with the closest relationship to the player.
+Event 12 – Major Naval Battle (choice_point)
+Climax fight.
+Lead charge → +2
+Cowardice → −2
+Injury possible
+Author note: More difficult, hectic than previous battle. Ends with a fight with the Navy
+commander.
+Bry Return (conditional)
+If bry_exiled AND navy_flag true.
+Bry returns with navy, takes the role of Navy commander in the final fight.
+Resolve conflict.
+Author Note: Focus on relationship with the captain after the fight, whether a good
+relationship or fraught over differences in opinion and decisions.
+Event 13 – Crew Loyalty Check (scene_only)
+Narrative summary of how crew views player based on rep.
+Event 14 – Final Confrontation (choice_point)
+Mutiny or captain’s decision.
+Rep ≥5 → supported leadership
+
+Rep ≤−3 → fear/exile
+Else duel outcome determines ending. Duel outcome is positive if Tier 3 weapon, gun or
+Reputation is above +5 AND Health is &gt;3.
+Ending Logic
+Provide short epilogue summarizing life path.
+Avoid numbers.
+High reputation leads to supported leadership.
+Low reputation leads to fear or exile.
+Neutral reputation leads to uncertain duel outcome.
+Provide short epilogue only.
+Opening Paragraphs for Stylistic Example (Always to be used to begin story,
+offers stylistic example and context)
+
+Seagulls, salty air and the clanging of distant alarms. Soldiers with drawn swords barrel
+down the windy streets of the port town, towards the dock. What was supposed to be
+another daily routine, barely robbing the food needed to survive had turned into something
+much more. Now, the danger was fast approaching. While townsfolk hurried away with
+their wares, leaving the port to the whims of the king’s men, you barely had a chance to
+breathe.
+The shouts were getting closer, the anger in their voices; cursing you, cursing all ‘street-rats’
+as nothing but scum under their feet. These were not the calm voices of the old patrol. These
+would not be taking any guff, any quick-witted responses that may give just enough pity to
+survive. Maybe the purse had contained more gold than originally thought - but what lord
+truly needs to be carrying that much gold around anyway? In your now sweaty hands, the
+cloth feels heavy and damp. Still, you clutch it tighter, and glance around the quickly
+emptying collection shacks and boats rocking calmly against the wood of the harbour.
+Up ahead, the largest of the ships had a collection of crew-members moving faster than
+usual to load barrels onto the deck. They were busy, distracted by a tough job, knowing the
+tougher journey they must have ahead. A split second could make the difference. In the
+distance, the first soldiers were starting to appear, although they had seen you come this
+way, your location was hidden for now. The ship swayed calmly, unaware of the shouts, the
+clanging of metal hitting off the street walls as drawn swords threatened to end your life
+swiftly. It was now or never. The walkway to the ship was barely a quick dash away, the
+barrels of food lay ready to be loaded, and the water below may offer just enough cover to
+remain out of prying eyes.
+
+Further Notes and Rules:
+Player must have at least one option while at port to spend accumulated gold. The amount
+of gold owned needs to be mentioned in passing. Weapons will be for sale, as will food.
+These can either give a better health outcome, or better, easier options in combat.
+Only one NPC character maximum should be explored in detail in each scene.
+3 Weapons tier exist. You start at basic, having access to a knife. NPCs can gift you sword
+with good reputation or loyalty. Port has Tier 2 and Tier 3 weapons for sale. These are
+better swords. There is the ability to get a gun, either from the Navy commander or for 50
+gold at port.
+Tier 1: normal
+Tier 2: Prevents 1 injury in battle.
+Tier 3: Advantage in duels, very unlikely to lose any duel.
