@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Diverge MVP Test</title>
+    <style>
+      body { font-family: system-ui, Arial; max-width: 900px; margin: 24px auto; }
+      textarea, input, select { width: 100%; padding: 10px; margin: 8px 0; }
+      button { padding: 10px 16px; }
+      pre { white-space: pre-wrap; background: #f5f5f5; padding: 12px; border-radius: 8px; }
+    </style>
+  </head>
+  <body>
+    <h2>Diverge MVP – /generate test</h2>
+
+    <label>session_id</label>
+    <input id="session_id" value=""demo" />
+
+    <label>scene_type</label>
+    <select id="scene_type">
+      <option value="choice_point" selected>choice_point</option>
+      <option value="scene_only">scene_only</option>
+    </select>
+
+    <label>event_id</label>
+    <input id="event_id" value="E1" />
+
+    <label>world_summary</label>
+    <textarea id="world_summary" rows="2">Pirate ship at dusk.</textarea>
+
+    <label>event_card</label>
+    <textarea id="event_card" rows="3">You run toward the harbor with knights behind you. A ship creaks at the pier; barrels and nets offer cover.</textarea>
+
+    <label>recent_memory</label>
+    <textarea id="recent_memory" rows="2"></textarea>
+
+    <label>player_input</label>
+    <textarea id="player_input" rows="2">I hide among crates and wait.</textarea>
+
+    <button id="go">Generate</button>
+
+    <h3>Response</h3>
+    <pre id="out">(none yet)</pre>
+
+    <script>
+      const out = document.getElementById("out");
+      document.getElementById("go").onclick = async () => {
+        out.textContent = "Loading...";
+        const payload = {
+          session_id:document.getElementById("session_id").value,
+          scene_type: document.getElementById("scene_type").value,
+          event_id: document.getElementById("event_id").value,
+          world_summary: document.getElementById("world_summary").value,
+          event_card: document.getElementById("event_card").value,
+          recent_memory: document.getElementById("recent_memory").value,
+          player_input: document.getElementById("player_input").value,
+        };
+
+        const res = await fetch("http://localhost:3001/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        out.textContent = data.text || JSON.stringify(data, null, 2);
+      };
+    </script>
+  </body>
+</html>
