@@ -18,7 +18,7 @@ const MAX_INPUT_CHARS = 12000; // hard guard against runaway prompts
 const MAX_TOKENS = 450; // keeps responses short (2–3 paragraphs)
 
 function clampString(s, max) {
-  if (!s) return "";f
+  if (!s) return "";
   if (typeof s !== "string") return String(s);
   return s.length > max ? s.slice(0, max) : s;
 }
