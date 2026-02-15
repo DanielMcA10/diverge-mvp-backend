@@ -47,10 +47,15 @@ function getSession(sessionId) {
   return sessions.get(sessionId);
 }
 
-// Load bible by story_id (MVP: pirate uses bible.txt)
 function loadBible(storyId) {
-  // Later you can switch on storyId to load different files
-  const biblePath = path.join(__dirname, "bible.txt");
+  const bibleMap = {
+    pirate: "pirate bible.txt",
+    detective: "detective bible.txt",
+  };
+
+  const fileName = bibleMap[storyId] || "pirate bible.txt"; // fallback
+
+  const biblePath = path.join(__dirname, fileName);
   return fs.readFileSync(biblePath, "utf8");
 }
 
@@ -86,16 +91,15 @@ app.post("/generate", async (req, res) => {
       event_card,
       recent_memory, // client-side memory (we ignore for truth; server owns truth)
       player_input,
-      session_id = "demo",
-      story_id = "pirate",
+      session_id,
+      story_id,
     } = req.body;
 
-    const combinedLen = JSON.stringify(req.body).length;
-    if (combinedLen > MAX_INPUT_CHARS) {
-      return res.status(413).json({ error: "Input too large. Reduce world_summary/event_card/recent_memory." });
-    }
+    const safeSessionId = String(session_id || "demo").trim();
+    const safeStoryId = String(story_id || "pirate").trim().toLowerCase();
 
-    const s = getSession(session_id);
+    const s = getSession(safeSessionId);
+    const bible = loadBible(safeStoryId);
 
     // Server-side recent memory (truth)
     const serverRecentMemory = clampString(s.recent_memory || "", 4000);
@@ -103,7 +107,7 @@ app.post("/generate", async (req, res) => {
     // Optional: cap stats string length (they’re tiny anyway)
     const statsLine = `health:${s.stats.health}, reputation:${s.stats.reputation}, money:${s.stats.money}`;
 
-    const bible = loadBible(story_id);
+    const bible = loadBible(safeStoryId);
 
     // Clamp incoming fields (avoid runaway prompt)
     const payload = {
@@ -179,7 +183,7 @@ Rules:
     s.recent_memory = clampString(s.recent_memory, 4000);
 
     return res.json({
-      session_id,
+      session_id: safeSessionId,
       text: parsed.text,
       choices: parsed.choices,
       stats: s.stats, // optional, helpful for UI later
