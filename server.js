@@ -107,8 +107,6 @@ app.post("/generate", async (req, res) => {
     // Optional: cap stats string length (they’re tiny anyway)
     const statsLine = `health:${s.stats.health}, reputation:${s.stats.reputation}, money:${s.stats.money}`;
 
-    const bible = loadBible(safeStoryId);
-
     // Clamp incoming fields (avoid runaway prompt)
     const payload = {
       scene_type: clampString(scene_type, 80),
