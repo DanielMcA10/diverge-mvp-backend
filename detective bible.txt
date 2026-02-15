@@ -168,7 +168,7 @@ If Cherry is alive, she thanks you for the hard work and offers you a reward. If
 
 Author note: The player has full roam to make any decisions along the way, even if not offered as options. You must interpret this. NPCs can be killed, but it is discouraged.
 
-Opening Paragraphs for Style And Context; How the Story should begin.
+Opening Paragraphs for Style And Context; How the Story should begin. Make sure opening scene contains Cherry coming into the office and ends with her leaving.
 
 The city was beginning to sleep; dark shadows cast low over alleys and roads. In the distance, the few taxis still running could be heard. The local booze-hounds were streaming out of the hidden speak-easies, avoiding the preying eyes of cops. Lights could be seen in some windows, high against the dull bricks and stairwells. You take it all in, safe in your office, nothing but the smell of cigar smoke and the taste of a proper whiskey filling the room. It was these quiet times that the vibrant, bustling city of the day showed its true colours; dark, dull colours - of gray, black, and dirtied brick. 
 
@@ -182,3 +182,4 @@ Further Notes and Rules:
 Money is only a resource to be used to pay characters who may offer information in return. 
 Reputation being high means trust among NPCs.
 Health persists, making chasing or fights in later events harder if low.
+Story should always maintain a mystery-based narrative style.
