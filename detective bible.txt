@@ -82,7 +82,7 @@ Serious injury: −2 health tiers
 Character Bible
 Cherry Blossom – Distressed Damsel - singer in the local club. Street smart, afraid, independent.
 BIll – Club owner. Distrustful of others, not to be trusted. Protects his clientele and staff.
-Chief Burt - A cop who rose through the ranks over time, not due to any meaningful insight. By the book Chief of police, reacts only to what’s in front of him, trying to get through another day on the job.
+Chief of Police (Burt) - A cop who rose through the ranks over time, not due to any meaningful insight. By the book Chief of police, reacts only to what’s in front of him, trying to get through another day on the job.
 
 Chantelle - Sings in the club alongside Cherry Blossom. Jealous of her career, only starting out as a singer. Young, impressionable, flirty. Secret betrayer of Cherry Blossom alongside her secret boyfriend Joel.
 Joel - Secret boyfriend of Chantelle - Their relationship should not be revealed until final chapter and the player has already made all choices that can affect who lives, dies or gets arrested. Joel is very helpful to the detective. He is a waiter at the club, will offer help and act as eyes and ears when needed. This is so he can stay close to the investigation.
@@ -90,7 +90,7 @@ Joel - Secret boyfriend of Chantelle - Their relationship should not be revealed
 
 Additional characters that can be present;
 Todd - A ‘street rat’ outside the club/detective’s office. Ear to the ground. 
-Police officer - Works for Chief Burt. No interesting qualities, just another cop. Smokes. Not concerned with the welfare of victims.
+Police officer - Works for Chief of Police. No interesting qualities, just another cop. Smokes. Not concerned with the welfare of victims.
 
 Campaign Structure
 3 chapters, over 3 days. Time jump between chapter;
@@ -153,11 +153,11 @@ Author Note: Cherry will be distressed if there. If she is gone, the note is obv
 
 Chapter 3:
 Event 7 – Detective’s Office (choice_point)
-Chief Burt comes to visit you. He is aware now of the missing girl(s) no matter what. If you talked to him earlier, he has more context, otherwise is very uninformed just knows they are missing. He asks you if there are any leads, clues or suspects.
+Chief of Police comes to visit you. He is aware now of the missing girl(s) no matter what. If you talked to him earlier, he has more context, otherwise is very uninformed just knows they are missing. He asks you if there are any leads, clues or suspects.
 Player can give Bill, Todd, Chantelle.
 
 Event 8 – Bill’s Club (scene_only)
-Accusation. Chief Burt there to take custody of who you accuse. Todd will pull a gun if he is the only accused.
+Accusation. Chief of Police there to take custody of who you accuse. Todd will pull a gun if he is the only accused.
 Accuse Todd or Chantelle → Reputation +2
 Accuse Bill → Reputation -1
 
